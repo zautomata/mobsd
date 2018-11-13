@@ -1,0 +1,171 @@
+## Get Countries
+
+gawk '
+BEGIN {
+	FS="\"*,\"*"
+	OFS="\",\""
+	print "\"" "id", "name", "slug" "\""
+}
+NR>1 {
+	slug = tolower($2)
+	slug_pass_one = gsub(/[ ,_.]/, "-", slug)
+
+	if (!($1 in country_id)) {
+		country_id[$1]++
+	}
+
+	if (!($2 in country_name)) {
+		country_name[$1] = $2
+	}
+
+	if (!(slug in country_slug)) {
+		country_slug[$1] = slug
+	}
+
+	# id, name, slug
+	#print "\"" countries[$6], $6, regions[region], region, cities_count, $11, $13 "\""	
+}
+END {
+	for (i in country_id) {
+		print i, country_name[i], country_slug[i] "\""
+	}
+}
+' main_export.csv
+
+## Get Regions
+
+gawk '
+BEGIN {
+	FS="\"+,\"+"
+	OFS="\",\""
+	print "\"" "id", "country_id", "name", "slug" "\""
+}
+NR>1 {
+	slug = tolower($4)
+	slug_pass_one = gsub(/[ ,_.]/, "-", slug)
+
+	country_id = $1
+	gsub(/"/, "", country_id)
+	country_ids[$3] = country_id
+
+	if (!($3 in ids)) {
+		ids[$3]++
+	}
+
+	if (!($4 in names)) {
+		names[$3] = $4
+	}
+
+	if (!(slug in slugs)) {
+		slugs[$3] = slug
+	}
+
+	# id, name, slug
+	#print "\"" countries[$6], $6, regions[region], region, cities_count, $11, $13 "\""	
+}
+END {
+	for (i in ids) {
+		print "\"" i, country_ids[i], names[i], slugs[i] "\""
+	}
+}
+' main_export.csv
+
+## Get Cities
+
+gawk '
+BEGIN {
+	FS="\"+,\"+"
+	OFS="\",\""
+	print "\"" "id", "region_id", "name", "slug", "timezone" "\""
+}
+NR>1 {
+	slug = tolower($6)
+	slug_pass_one = gsub(/[ ,_.]/, "-", slug)
+
+	if (slug in city_slugs) {
+		i = 2
+		newslug = slug "-" i
+		while (newslug in city_slugs) {
+			i++
+			newslug = slug "-" i
+		}
+		slug = newslug
+	}
+
+	city_slugs[slug] = slug
+
+	# id, name, slug
+	print "\"" $5, $3, $6, slug, $7 "\""
+}
+END {
+}
+' main_export.csv
+
+## Insert countries
+
+gawk '''BEGIN {
+	FS="\"?,\"?"
+	OFS=""
+	print "INSERT INTO `cities` (`id`, `region_id`, `name`, `slug`, `timezone`, `created`, `modified`) VALUES"
+}
+NR>1 {
+
+	line_ending = ","
+
+	gsub(/"/, "", $1)
+	gsub(/'\''/, "\\'\''", $3)
+	gsub(/'\''/, "", $4)
+	gsub(/"/, "", $5)
+
+	print "('\''" $1 "'\'', '\''" $2 "'\'', '\''" $3 "'\'', '\''" $4 "'\'', '\''" $5 "'\'', now(), now())" line_ending
+
+}
+END {
+}
+''' cities_export2.csv
+
+## Insert regions
+
+gawk '''BEGIN {
+	FS="\"?,\"?"
+	OFS=""
+	print "INSERT INTO `regions` (`id`, `country_id`, `name`, `slug`, `created`, `modified`) VALUES"
+}
+NR>1 {
+
+	line_ending = ","
+
+	gsub(/"/, "", $1)
+	gsub(/'\''/, "\\'\''", $3)
+	gsub(/"/, "", $4)
+	gsub(/'\''/, "", $4)
+
+	print "('\''" $1 "'\'', '\''" $2 "'\'', '\''" $3 "'\'', '\''" $4 "'\'', now(), now())" line_ending
+
+}
+END {
+}
+''' regions_export2.csv
+
+## Insert cities
+
+gawk '''BEGIN {
+	FS="\"?,\"?"
+	OFS=""
+	print "INSERT INTO `cities` (`id`, `region_id`, `name`, `slug`, `timezone`, `created`, `modified`) VALUES"
+}
+NR>1 {
+
+	line_ending = ","
+
+	gsub(/"/, "", $1)
+	gsub(/'\''/, "\\'\''", $3)
+	gsub(/'\''/, "", $4)
+	gsub(/"/, "", $5)
+
+	print "('\''" $1 "'\'', '\''" $2 "'\'', '\''" $3 "'\'', '\''" $4 "'\'', '\''" $5 "'\'', now(), now())" line_ending
+
+}
+END {
+}
+''' cities_export2.csv

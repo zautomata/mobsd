@@ -1,0 +1,17 @@
+#TODO write the DDD literature better
+
+
+./domain (citybox)
+	/boundcontextA (opendatahub)
+		/domain-language-constructA.sh (upload_data.sh) (command)
+		/domain-language-constructB.sh (create_torrent.sh) (command)
+		/domain-language-constructC.sh (download_data.sh) (query)
+	/boundedcontextB
+		/domain-language-constructE.sh
+		/domain-language-constructD.sh
+
+Each Microservice have its own bounded-context with a portion of the domain-specific language.
+
+Here we capture the domain verbs(commands and queries) into shellscripts. 
+
+Each script takes arguments and creates nessesary events that gets stored into the ./DATA  

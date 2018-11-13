@@ -1,0 +1,65 @@
+simplicity always give birth to flexibility - mo (blockchain ready). simple code is fast code. Unix phiosphy. less is more.
+
+Databases are state-only. 
+Eventstore is append-only. 
+Who should be touched first?
+Answer: a "boundedcontext:create_event_command" will result in 
+"Eventstore:EventAttempted" -> syslog.conf will execute programs that would Touch the database(s) -> "EventStore:EventConcluded".
+/var/log/citybox/opendatahub.events.log
+/var/log/citybox/opendatahub.commands.log
+/var/log/citybox/opendatahub.queries.log
+/var/DATA/citybox/mongodb or postgresql or somthingelse
+/var/DATA is an external drive mounted
+
+A good taste in selectin ideas:
+- Make(1) used as a code generation tool for different microservices, similar to django/Rails approach for rapid development. 
+- KSH scripts and Make(1) used as a DevOps basic tool for different microservices.
+- Operating System(OpenBSD) as a development framework for our system is favoured over using a language-specific framework(s). Base tools are favoured over ports. 
+
+Commands and Queries for each microservice are the DSL constructs used in its bounded context.
+commands write data to a database. (create_datasource, update_datasource, delete_datasource, etc.)
+queries read data from a database. (read_datasource)
+
+- commands write to csv flat-file database or mongodb while recording events to eventstore.
+- cqsyncd syncs between commands database and queries database via using eventstore to update queries databases. (how to create a database from events stored in json format on disk as an append-only?)
+- queries read from a redis database while recording events to eventstore i.e. RedisQueryAttepmted, RedisQuerySucceeded.
+
+citybox blockchain: use newsyslog(8) to store the rotated "filtered interesting events" opendatahub eventstore of logs into a blockchain(addblock/verify chain) by sending them to a blockchain-node-miniserver.
+
+data-driven architecture: inexpensive commodity hardware (miniservers).
+
+openculture: stackoverflow forum like for urban thingy and IRC for devs along with webinterface.
+
+security between microservices: 
+pub/private tokens between microservices.
+email-sent access tokens.
+signify events.
+
+TODO
+- Write Operations - CQRS Commands
+-- website sends write events in json to a webserver(obsd httpd) via POST\PUT verbs
+-- obsd httpd recevies the json to a specific endpoint 
+-- jq is used to make sense of json
+-- specific endpoint utility uses endpoint.commands.syslog (and logs via a merkle tree manner of previous syslog messages)
+-- every endpoint acts as a single microservers and has its two seperate append-only syslog files(one for commands and one for query events), rotated backup is done via the OS to external drives, snapeshots too. 
+-- a filedatabase(csv) daemon that monitors the syslog file uses syslog events to create a state-only file database 
+-- a graph database daemon that monitors the syslog file uses syslog events to create a state-only graph database
+OR use 	syslog.conf(5) as a unix pub/sub thingy :)
+-- each endpoint/microservice stores its events but not "stateful data" 
+TODO
+- Read Operations - CQRS Query
+-- website sends read events in json to a webserver(obsd httpd) via GET verbs
+-- obsd httpd recevies the json to a specific endpoint 
+-- jq is used to make sense of json
+-- specific endpoint utility uses endpoint.query.syslog (and logs via a merkle tree manner of previous syslog messages)
+
+bib:
+- www.future-processing.pl/blog/cqrs-simple-architecture/
+- blog.codinghorror.com/building-a-computer-the-google-way/
+- blog.coddinghorror.com/what-does-stack-overflow-want-to-be-when-it-grows-up/
+- udidahan.com/wp-content/uploads/Clarified_CQRS.pdf
+- www.usenix.org/legacy/event/sec09/tech/slides/crosby.pdf (Efficent Data structures for tamper-evident logging)kj:w
+- www.owasp.org/index.php/Error_Handling,_Auditing_and_Logging#Audit_Trails (secure logging recommendations) 
+- https://arxiv.org/pdf/1807.03662.pdf (trialchain: A blockchain-platform for medical data using multichain)
+- https://logsentinel.com/white-paper/
+- https://openbsd.org/papers/bsdcan-signify.html

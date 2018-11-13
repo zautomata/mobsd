@@ -1,0 +1,5 @@
+{
+	"queries": {
+		"redis": "get ID"
+	}
+}

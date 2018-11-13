@@ -1,0 +1,1 @@
+- error handling for a command\query that doesn't exist 
